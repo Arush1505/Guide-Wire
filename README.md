@@ -1,195 +1,150 @@
-# TEAM SOLARIS
-# Log Classification System
-
-A machine learning-based system for classifying various types of logs including Apache, SSH, Linux system logs, server logs, web application logs, and Kubernetes logs. Now enhanced with Gemini AI integration for synthetic log generation and better feature extraction.
+# Team - SOLARIS
 
 ## Overview
 
-This system uses pre-trained machine learning models to classify log entries and detect potential issues or suspicious activities. It can analyze logs from files, standard input, directly from Kubernetes clusters, or even generate synthetic logs using Google's Gemini API.
+This Kubernetes Error Detection System is an advanced machine learning-based solution for monitoring, analyzing, and classifying Kubernetes logs to proactively identify issues before they affect your infrastructure. The system uses specialized ML models trained on thousands of real-world Kubernetes logs to detect anomalies, potential failures, and security threats.
 
-## Features
+## Key Features
 
-- **Multiple Log Types Support**:
+### Kubernetes-Specific Log Classification
 
-  - Apache web server logs
-  - SSH authentication logs
-  - Linux system logs
-  - Server performance logs
-  - Web application logs
-  - Kubernetes logs
+- **Component-Level Analysis**: Specialized models for kubelet, kube-apiserver, controller-manager, scheduler, etcd, and proxy logs
+- **Pod Health Monitoring**: Real-time detection of pod crash loops, OOMKills, and startup failures
+- **Cluster-Wide Insights**: Aggregated analysis across nodes for system-wide issue detection
 
-- **Multiple Input Sources**:
+### Log Collection Methods
 
-  - Read from log files
-  - Process log directories
-  - Monitor logs in real-time
-  - Fetch logs from Kubernetes clusters
-  - Generate synthetic logs with Gemini AI
+- **Direct Cluster Integration**: Connects to Kubernetes API for real-time log streams
+- **Label and Namespace Filtering**: Target specific workloads or system components
+- **Historical Analysis**: Process stored log files for post-incident investigation
 
-- **Advanced Processing Capabilities**:
+### Classification Capabilities
 
-  - Real-time log analysis
-  - Batch processing for large log files
-  - AI-powered feature extraction
-  - Model selection based on log type
-  - Probability scores for classifications
-
-- **Kubernetes Integration**:
-  - Direct integration with kubectl
-  - Pod health analysis
-  - Cluster-wide log collection
-  - Label-based filtering
+- **Error Categorization**: Precisely identifies error types (network, storage, permission, resource)
+- **Severity Assessment**: Prioritizes issues based on potential impact
+- **Root Cause Analysis**: Correlates related log entries to identify underlying issues
 
 ## Installation
 
-1. Clone the repository:
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/kubernetes-error-detection.git
+cd kubernetes-error-detection
 
-   ```bash
-   git clone https://github.com/yourusername/log-classification-system.git
-   cd log-classification-system
-   ```
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-2. Create and activate a virtual environment:
+# Install dependencies
+pip install -r requirements.txt
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install dependencies:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
+# Configure kubectl access (system requires cluster access)
+# Your cluster should be configured in ~/.kube/config
+```
 
 ## Usage
 
-### Basic Log Classification
+### Basic Kubernetes Log Analysis
 
 ```bash
-# Classify a single log file
-python classify_real_logs.py file /path/to/logfile.log
-
-# Classify all logs in a directory
-python classify_real_logs.py directory /path/to/logs/
-
-# Monitor a log file in real-time
-python classify_real_logs.py monitor /path/to/logfile.log
-```
-
-### Kubernetes Log Analysis
-
-```bash
-# Analyze all pods in a namespace for issues
-python kubernetes_logs.py analyze-pods --namespace default
+# Analyze all pods in a namespace
+python k8s_detect.py analyze-pods --namespace default
 
 # Get and classify logs from a specific pod
-python kubernetes_logs.py logs my-pod-name --namespace default
+python k8s_detect.py logs my-pod-name --namespace kube-system
 
-# Process a Kubernetes log file
-python kubernetes_logs.py file /path/to/kubernetes.log
+# Process a saved Kubernetes log file
+python k8s_detect.py file /path/to/kubernetes.log
 
-# Get logs from pods with a specific label
-python kubernetes_logs.py label app=nginx --namespace default
+# Filter and analyze pods by label
+python k8s_detect.py label app=nginx --namespace production
 ```
 
-## Models
+### Advanced Features
 
-The system uses pre-trained machine learning models to classify different types of logs:
+```bash
+# Real-time monitoring with alerts
+python k8s_detect.py monitor --namespace default --alert-threshold high
 
-- `apache_model.joblib`: Classifies Apache web server logs
+# Generate cluster health report
+python k8s_detect.py report --output-format html --output-file cluster-health.html
 
-  - Features: `Message`, `hour`, `minute`
-  - Detects suspicious web requests, potential attacks
+# Analyze specific Kubernetes components
+python k8s_detect.py component etcd,kubelet --time-range 24h
+```
 
-- `linux_log.joblib`: Classifies Linux system logs
+## Kubernetes Component Models
 
-  - Features: `combined_text`, `hour`, `minute`
-  - Identifies system issues, errors, and anomalies
+The system includes specialized models for different Kubernetes components:
 
-- `server_log.joblib`: Classifies server performance logs
+| Component          | Model File              | Detection Capabilities                                                |
+| ------------------ | ----------------------- | --------------------------------------------------------------------- |
+| kubelet            | kubelet_model.joblib    | Pod scheduling failures, volume mount issues, image pull errors       |
+| kube-apiserver     | apiserver_model.joblib  | Authentication failures, request throttling, etcd connectivity issues |
+| etcd               | etcd_model.joblib       | Consistency errors, leader election issues, data corruption           |
+| controller-manager | controller_model.joblib | Reconciliation failures, resource management issues                   |
+| scheduler          | scheduler_model.joblib  | Pod assignment failures, resource constraints                         |
+| proxy              | proxy_model.joblib      | Service connectivity, network routing problems                        |
 
-  - Features: `Duration`, `Packets`, `Flows`, `Src Pt`, `Dst Pt`, `Bytes_num`, `hour`, `Proto`
-  - Detects performance issues, network anomalies
+## Classification Process
 
-- `ssh_login.joblib`: Classifies SSH authentication logs
-
-  - Features: `hour`, `minute`, `day_of_week`, `user_encoded`, `password_encoded`
-  - Identifies brute force attempts, suspicious logins
-
-- `weblog.joblib`: Classifies web application logs
-  - Features: `Request`, `Method`, `hour`, `minute`
-  - Detects application attacks, suspicious activities
-
-## Log Processing Flow
-
-1. **Input Processing**: System ingests logs from files, directories, or Kubernetes
-2. **Log Type Detection**: Automatically identifies the log type
-3. **Feature Extraction**: Extracts relevant features based on log type
-4. **Model Selection**: Chooses appropriate model for the log type
-5. **Classification**: Applies the model to classify the log
-6. **Output Generation**: Returns classification with probability and interpretation
-
-## Gemini AI Integration
-
-The Gemini API integration provides two key capabilities:
-
-1. **Synthetic Log Generation**: Creates realistic log entries for any supported log type
-
-   - Useful for testing and model validation
-   - Helps demonstrate system capabilities
-   - Can generate examples of both normal and suspicious logs
-
-2. **Intelligent Feature Extraction**: Uses AI to parse log text into structured features
-   - Converts unstructured log text to model-ready features
-   - Handles different log formats automatically
-   - Extracts time-based features from timestamps
-
-## Kubernetes Log Analysis
-
-The system provides specialized capabilities for Kubernetes environments:
-
-- Pod health checks based on log patterns
-- Detection of common Kubernetes issues
-- Classification of logs from different Kubernetes components
-- Integration with kubectl for direct log access
-
-Supported Kubernetes components:
-
-- kubelet
-- kube-apiserver
-- controller-manager
-- scheduler
-- ingress-controller
-- network plugins (Calico, etc.)
+1. **Log Acquisition**: Collects logs from Kubernetes API or files
+2. **Component Identification**: Determines source component (kubelet, api-server, etc.)
+3. **Feature Extraction**: Parses structured and unstructured log data
+4. **Model Selection**: Applies the appropriate component-specific model
+5. **Classification**: Categorizes log entries and assigns severity
+6. **Correlation**: Groups related events to identify patterns
+7. **Reporting**: Generates actionable insights and recommendations
 
 ## Extending the System
 
-### Adding New Log Types
-
-1. Train a new model using scikit-learn or XGBoost
-2. Save the model as a `.joblib` file in the `models/` directory
-3. Update the `MODEL_INFO` dictionary in the code with the new model's feature requirements
-4. Add appropriate parsing logic to the LogReader class
-
-### Customizing Gemini Prompts
-
-You can customize how Gemini generates logs by modifying the prompts in the `generate_log_with_gemini()` function:
+### Adding New Component Models
 
 ```python
-prompts = {
-    'apache_model': "Generate a realistic Apache web server log entry.",
-    'linux_log': "Generate a realistic Linux system log entry.",
-    # Add or modify prompts here
-}
+# Train a model for a new Kubernetes component
+from sklearn.ensemble import RandomForestClassifier
+from kubernetes_log_toolkit import LogProcessor
+
+# Process training data
+processor = LogProcessor('new_component')
+X_train, y_train = processor.prepare_training_data('training_logs/')
+
+# Train and save model
+model = RandomForestClassifier(n_estimators=100)
+model.fit(X_train, y_train)
+joblib.dump(model, 'models/new_component_model.joblib')
+
+# Update component registry
+update_component_registry('new_component',
+                         ['feature1', 'feature2'],
+                         'models/new_component_model.joblib')
+```
+
+### Custom Error Categories
+
+Edit the `error_categories.yaml` file to define new error types and their patterns:
+
+```yaml
+custom_error_type:
+  patterns:
+    - "specific error pattern"
+    - "another error pattern"
+  severity: high
+  recommended_action: "Steps to resolve this issue"
 ```
 
 ## Troubleshooting
 
-- **Model loading errors**: Ensure models are in the correct format (.joblib) in the models/ directory
-- **Feature errors**: Check that the log format matches what the model expects
-- **Gemini API errors**: Verify your API key and internet connection
+- **Connection Issues**: Ensure kubectl is properly configured with cluster access
+- **Permission Errors**: The service account needs log access permissions
+- **Missing Models**: Verify all component models are in the models/ directory
+- **Performance Issues**: Adjust batch size and sampling rate for large clusters
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Areas for improvement include:
+
+- Additional Kubernetes component models
+- Support for custom resource logs
+- Enhanced correlation algorithms
+- Integration with monitoring systems
